@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="edu.uestc.blog.dao.LinkDao">
+	
+	<resultMap type="Link" id="LinkResult">
+		<result property="id" column="id" />
+		<result property="linkName" column="linkName" />
+		<result property="linkUrl" column="linkUrl" />
+		<result property="orderNo" column="orderNo" />
+	</resultMap>
+	
+	<!-- 1.查询所有的友情链接 -->
+	<select id="list" resultMap="LinkResult">
+		select * from t_link
+	</select>
+	<!-- 2.根据id查询 -->
+	<select id="findById" parameterType="Integer"  resultMap="LinkResult">
+		select * from t_link where id = #{id}
+	</select>
+	
+	<!-- 3.多条件查询 -->
+	<select id="findByMap" parameterType="Map"  resultMap="LinkResult">
+		select * from t_link where 1=1
+		order by orderNo	
+		<if test="start != null and pageSize != null ">
+			limit #{start},#{pageSize}
+		</if>
+		
+	</select>
+	
+	<!-- 4.查询链接类型数量 -->
+	<select id="getTotal" parameterType="Map"  resultType="Long">
+		select count(*) from t_link
+	</select>
+	
+	<!-- 5.增加一条链接 -->
+	<insert id="add" parameterType="Link" useGeneratedKeys="true" keyProperty="id">
+		insert into t_link values (null,#{linkName},#{linkUrl},#{orderNo})
+	</insert>
+	
+	<!-- 6.修改一条链接 -->
+	<update id="update" parameterType="Link">
+		update t_link 
+		<set>
+			<if test="linkName != null and linkName != ''">
+				linkName = #{linkName},
+			</if>
+			<if test="linkUrl != null and linkUrl != ''">
+				linkUrl = #{linkUrl},
+			</if>
+			<if test="orderNo != null">
+				orderNo = #{orderNo},
+			</if>
+		</set>
+		where id=#{id}
+	</update>
+	
+	<!-- 7.删除一条链接 -->
+	<delete id="delete" parameterType="Integer">
+		delete from t_link where id = #{id}
+	</delete>	
+</mapper>

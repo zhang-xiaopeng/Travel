@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="edu.uestc.blog.dao.BlogTypeDao">
+	
+	<resultMap type="BlogType" id="BlogTypeResult">
+		<result property="id" column="id" />
+		<result property="typeName" column="typeName" />
+		<result property="orderNo" column="orderNo" />
+		<result property="blogCount" column="blogCount" />
+	</resultMap>
+	
+	<!-- 1.查询所有的博客类型，并将每种类型的博客数量查询出来 -->
+	<select id="findAllBlogType"  resultMap="BlogTypeResult">
+		<!-- 查询所有的博客类型列表时，将每种类型的博客数量也查询出来 -->
+		select t2.id,t2.typeName,count(t1.id) as blogCount from t_blog t1
+		right join t_blogtype t2 on t1.typeId = t2.id group by t2.typeName
+		order by t2.orderNo
+	</select>
+	
+	<!-- 2.根据id查询 -->
+	<select id="findById" parameterType="Integer"  resultMap="BlogTypeResult">
+		select * from t_blogtype where id = #{id}
+	</select>
+	
+	<!-- 3.多条件查询 -->
+	<select id="findByMap" parameterType="Map"  resultMap="BlogTypeResult">
+		select * from t_blogtype where 1=1
+		<if test="typeName != null and typeName != '' ">
+			and typeName = #{typeName}
+		</if>
+		order by orderNo	
+		<if test="start != null and pageSize != null ">
+			limit #{start},#{pageSize}
+		</if>
+		
+	</select>
+	
+	<!-- 4.查询博客类型数量 -->
+	<select id="getTotal" parameterType="Map"  resultType="Long">
+		select count(*) from t_blogtype
+	</select>
+	
+	<!-- 5.增加一条博客 -->
+	<insert id="add" parameterType="BlogType" useGeneratedKeys="true" keyProperty="id">
+		insert into t_blogtype values (null,#{typeName},#{orderNo})
+	</insert>
+	
+	<!-- 6.修改一条博客 -->
+	<update id="update" parameterType="BlogType">
+		update t_blogtype 
+		<set>
+			<if test="typeName != null and typeName != ''">
+				typeName = #{typeName},
+			</if>
+			<if test="orderNo != null">
+				orderNo = #{orderNo},
+			</if>
+		</set>
+		where id=#{id}
+	</update>
+	
+	<!-- 7.删除一条博客 -->
+	<delete id="delete" parameterType="Integer">
+		delete from t_blogtype where id = #{id}
+	</delete>	
+</mapper>

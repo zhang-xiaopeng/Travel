@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="edu.uestc.blog.dao.BlogDao">
+	
+	<resultMap type="Blog" id="BlogResult">
+		<result property="id" column="id" />
+		<result property="title" column="title" />
+		<result property="keyword" column="keyword" />
+		<result property="summary" column="summary" />
+		<result property="content" column="content" />
+		<result property="releaseDate" column="releaseDate" />
+		<result property="clickHit" column="clickHit" />
+		<result property="replyHit" column="replyHit" />
+		<association property="blogType" column="typeId" select="edu.uestc.blog.dao.BlogTypeDao.findById" />
+	</resultMap>
+	
+	<!-- 1.根据年月查询博客数量 -->
+	<select id="countList" resultMap="BlogResult">
+		select date_format(releaseDate,"%Y年%m月") as releaseDateStr ,count(*) as blogCount
+		from t_blog 
+		group by date_format(releaseDate,"%Y年%m月")
+		order by date_format(releaseDate,"%Y年%m月") desc
+	</select>
+	
+	<!-- 2.带参数查询 -->
+	<select id="list" parameterType="Map" resultMap="BlogResult">
+		select * from t_blog where 1=1
+		<if test="title != null and title != '' ">
+			and title like #{title}
+		</if>
+		<if test="typeId != null and typeId != '' ">
+			and typeId = #{typeId}
+		</if>	
+		<if test="keyword != null and keyword != '' ">
+			and keyword like #{keyword}
+		</if>	
+		<if test="releaseDateStr != null and releaseDateStr != '' ">
+			and date_format(releaseDate,"%Y年%m月") = #{releaseDateStr}
+		</if>		
+		order by releaseDate desc
+		<if test="start != null and pageSize != null">
+			limit #{start},#{pageSize}
+		</if>
+	</select>
+	
+	<!-- 3.带参数查询博客数量 -->
+	<select id="getTotal" parameterType="Map" resultType="Long">
+		select count(*) from t_blog where 1=1
+		<if test="title != null and title != '' ">
+			and title like #{title}
+		</if>
+		<if test="typeId != null and typeId != '' ">
+			and typeId = #{typeId}
+		</if>	
+		<if test="keyword != null and keyword != '' ">
+			and keyword = #{keyword}
+		</if>	
+		<if test="releaseDateStr != null and releaseDateStr != '' ">
+			and date_format(releaseDate,"%Y年%m月") = #{releaseDateStr}
+		</if>		
+	</select>
+	
+	<!-- 4.根据id查询博客 -->
+	<select id="findById" parameterType="Map" resultMap="BlogResult">
+		select * from t_blog where id = #{id}
+	</select>
+	
+	<!-- 5.增加博客 -->
+	<insert id="add" useGeneratedKeys="true" keyProperty="id" parameterType="Blog">
+		insert into t_blog values(null,#{title},#{keyword},#{summary},#{content},now(),0,0,#{blogType.id})
+	</insert>
+	
+	<!-- 6.更新博客 -->
+	<update id="update" parameterType="Blog">
+		update t_blog 
+		<set>
+			<if test="title != null and title != '' ">
+				title = #{title},
+			</if>
+			<if test="keyword != null and keyword != '' ">
+				keyword = #{keyword},
+			</if>
+			<if test="summary != null and summary != '' ">
+				summary = #{summary},
+			</if>
+			<if test="content != null and content != '' ">
+				content = #{content},
+			</if>
+			<if test="clickHit != null ">
+				clickHit = #{clickHit},
+			</if>
+			<if test="replyHit != null ">
+				replyHit = #{replyHit},
+			</if>
+			<if test="blogType.id != null ">
+				typeId = #{blogType.id},
+			</if>
+		</set>
+		where id = #{id}
+	</update>
+	
+	<!-- 7.删除博客 -->
+	<delete id="delete" parameterType="Integer">
+		delete from t_blog where id = #{id}
+	</delete>
+	
+	<!-- 8.取得上一篇，下一篇 -->
+	<select id="getLastBlog" parameterType="Integer" resultMap="BlogResult">
+		select * from t_blog
+		where id &lt; #{id}
+		order by id desc
+		limit 1
+	</select>
+	<select id="getNextBlog" parameterType="Integer" resultMap="BlogResult">
+		select * from t_blog
+		where id &gt; #{id}
+		order by id 
+		limit 1
+	</select>
+</mapper>
